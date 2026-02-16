@@ -24,6 +24,8 @@ from .coordinator import HashCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 COMPLETE_CHORE_SCHEMA = vol.Schema({vol.Required(CONF_CHORE_ID): cv.string})
 
 RESET_CHORE_SCHEMA = vol.Schema({vol.Required(CONF_CHORE_ID): cv.string})
@@ -36,11 +38,6 @@ SET_VACATION_SCHEMA = vol.Schema(
 )
 
 SET_GLOBAL_PAUSE_SCHEMA = vol.Schema({vol.Required("paused"): cv.boolean})
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the HASH integration (YAML — unused, but required)."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -1,13 +1,14 @@
 {
   "domain": "hash",
   "name": "HASH - Home Assistant Sweeping Hub",
-  "version": "1.0.0",
-  "codeowners": [],
+  "codeowners": ["@NerdySoftPaw"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/your-username/hash",
+  "documentation": "https://github.com/NerdySoftPaw/hash",
   "integration_type": "service",
   "iot_class": "calculated",
+  "issue_tracker": "https://github.com/NerdySoftPaw/hash/issues",
   "requirements": [],
-  "single_config_entry": true
+  "single_config_entry": true,
+  "version": "1.0.0"
 }
