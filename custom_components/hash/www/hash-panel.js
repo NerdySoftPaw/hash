@@ -416,62 +416,43 @@ class HashPanel extends LitElement {
   }
 
   render() {
-    if (this._loading) {
-      return html`
-        <ha-app-layout>
-          <app-header slot="header" fixed>
-            <app-toolbar>
-              <ha-menu-button
-                .hass=${this.hass}
-                .narrow=${this.narrow}
-              ></ha-menu-button>
-              <div main-title>HASH Dashboard</div>
-            </app-toolbar>
-          </app-header>
-          <div class="container">
-            <p class="loading">Loading...</p>
-          </div>
-        </ha-app-layout>
-      `;
-    }
-
-    const isAdmin = this.hass && this.hass.user && this.hass.user.is_admin;
-    const globalPause = this._data && this._data.global_pause;
+    const isAdmin = !this._loading && this.hass && this.hass.user && this.hass.user.is_admin;
+    const globalPause = !this._loading && this._data && this._data.global_pause;
 
     return html`
-      <ha-app-layout>
-        <app-header slot="header" fixed>
-          <app-toolbar>
-            <ha-menu-button
-              .hass=${this.hass}
-              .narrow=${this.narrow}
-            ></ha-menu-button>
-            <div main-title>HASH Dashboard</div>
-            ${isAdmin
-              ? html`
-                  <button
-                    class="add-btn"
-                    @click=${() => (this._showAddForm = true)}
-                    title="Add Chore"
-                  >
-                    +
-                  </button>
-                `
-              : ""}
-          </app-toolbar>
-        </app-header>
-        <div class="page">
-          ${globalPause
-            ? html`<div class="pause-banner">
-                Global Pause Active — no schedules generated
-              </div>`
-            : ""}
-          ${this._renderTabs()}
-          <div class="container ${this.narrow ? "narrow" : ""}">
-            ${this._renderTabContent()}
-          </div>
-        </div>
-      </ha-app-layout>
+      <div class="header">
+        <ha-menu-button
+          .hass=${this.hass}
+          .narrow=${this.narrow}
+        ></ha-menu-button>
+        <span class="header-title">HASH</span>
+        ${isAdmin
+          ? html`
+              <button
+                class="add-btn"
+                @click=${() => (this._showAddForm = true)}
+                title="Add Chore"
+              >
+                +
+              </button>
+            `
+          : ""}
+      </div>
+      ${this._loading
+        ? html`<div class="container"><p class="loading">Loading...</p></div>`
+        : html`
+            <div class="page">
+              ${globalPause
+                ? html`<div class="pause-banner">
+                    Global Pause Active — no schedules generated
+                  </div>`
+                : ""}
+              ${this._renderTabs()}
+              <div class="container ${this.narrow ? "narrow" : ""}">
+                ${this._renderTabContent()}
+              </div>
+            </div>
+          `}
 
       ${this._showAddForm ? this._renderAddForm() : ""}
     `;
@@ -494,36 +475,38 @@ class HashPanel extends LitElement {
       }
 
       /* ---- Header ---- */
-      app-header {
-        background-color: var(
-          --app-header-background-color,
-          var(--primary-color)
-        );
-        color: var(--app-header-text-color, #fff);
-      }
-      app-toolbar {
+      .header {
         display: flex;
         align-items: center;
+        height: 56px;
+        padding: 0 8px;
+        background: var(--app-header-background-color, var(--primary-color));
+        color: var(--app-header-text-color, #fff);
+        box-sizing: border-box;
+        position: sticky;
+        top: 0;
+        z-index: 10;
       }
-      app-toolbar [main-title] {
+      .header-title {
         flex: 1;
-        margin-left: 16px;
         font-size: 20px;
-        font-weight: 600;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-left: 4px;
       }
       .add-btn {
         background: none;
         border: 2px solid var(--app-header-text-color, #fff);
         color: var(--app-header-text-color, #fff);
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
-        font-size: 22px;
+        font-size: 20px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 8px;
+        margin-right: 4px;
         line-height: 1;
         padding: 0;
         transition: background 0.2s;
@@ -557,7 +540,11 @@ class HashPanel extends LitElement {
         display: flex;
         background: var(--hash-surface);
         border-bottom: 1px solid var(--hash-divider);
-        padding: 0;
+        padding: 0 16px;
+        max-width: 800px;
+        margin: 0 auto;
+        width: 100%;
+        box-sizing: border-box;
       }
       .tab {
         flex: 1;
