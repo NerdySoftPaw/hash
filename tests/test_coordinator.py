@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from homeassistant.core import HomeAssistant
+from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.hash.const import CONF_GLOBAL_PAUSE
 from custom_components.hash.coordinator import (
@@ -130,6 +131,8 @@ class TestCoordinator:
 
         # Complete it
         await coordinator.async_complete_chore(MOCK_CHORE_ID)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
         data = await coordinator._async_update_data()
         assert data[MOCK_CHORE_ID]["cleanliness"] > 99
@@ -146,6 +149,8 @@ class TestCoordinator:
         assert runtime["rotation_index"] == 0
 
         await coordinator.async_complete_chore(MOCK_CHORE_ID)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
         assert runtime["rotation_index"] == 1
 
     @pytest.mark.usefixtures("bypass_store")
@@ -160,6 +165,8 @@ class TestCoordinator:
         assert runtime["rotation_index"] == 0
 
         await coordinator.async_reset_chore(MOCK_CHORE_ID)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
         assert runtime["rotation_index"] == 0
 
     @pytest.mark.usefixtures("bypass_store")
