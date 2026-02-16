@@ -2,7 +2,7 @@
 name = "hash"
 version = "1.0.0"
 description = "HASH - Home Assistant Sweeping Hub"
-requires-python = ">=3.12"
+requires-python = ">=3.13.2"
 license = {text = "MIT"}
 
 [tool.pytest.ini_options]
@@ -10,7 +10,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py313"
 line-length = 88
 
 [tool.ruff.lint]
