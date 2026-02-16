@@ -432,7 +432,7 @@ class HashPanel extends LitElement {
           .hass=${this.hass}
           .narrow=${this.narrow}
         ></ha-menu-button>
-        <span class="header-title">HASH</span>
+        <span class="header-title">HASH <span class="header-subtitle">Home Assistant Sweeping Hub</span></span>
         ${isAdmin
           ? html`
               <button
@@ -496,10 +496,19 @@ class HashPanel extends LitElement {
       }
       .header-title {
         flex: 1;
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 700;
         letter-spacing: 1px;
         margin-left: 4px;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .header-subtitle {
+        font-size: 13px;
+        font-weight: 400;
+        opacity: 0.7;
+        letter-spacing: 0;
       }
       .add-btn {
         background: none;
