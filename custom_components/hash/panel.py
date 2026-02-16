@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 
 from homeassistant.components import frontend, panel_custom
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, PANEL_ICON, PANEL_TITLE, PANEL_URL_PATH
@@ -19,10 +20,8 @@ PANEL_WWW_PATH = Path(__file__).parent / "www"
 
 async def async_register_panel(hass: HomeAssistant) -> None:
     """Register the HASH frontend panel."""
-    hass.http.register_static_path(
-        PANEL_FRONTEND_URL,
-        str(PANEL_WWW_PATH),
-        cache_headers=False,
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(PANEL_FRONTEND_URL, str(PANEL_WWW_PATH), False)]
     )
 
     await panel_custom.async_register_panel(
