@@ -3,7 +3,7 @@
   "name": "HASH - Home Assistant Sweeping Hub",
   "codeowners": ["@NerdySoftPaw"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["http"],
   "documentation": "https://github.com/NerdySoftPaw/hash",
   "integration_type": "service",
   "iot_class": "calculated",

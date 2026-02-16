@@ -12,7 +12,8 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import selector
 
 from .const import (
@@ -58,6 +59,15 @@ class HashConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> HashOptionsFlow:
         """Get the options flow handler."""
         return HashOptionsFlow()
+
+
+def _resolve_area_name(hass: HomeAssistant, area_id: str) -> str:
+    """Resolve an area ID to its display name, falling back to the ID."""
+    if not area_id:
+        return ""
+    registry = ar.async_get(hass)
+    area = registry.async_get_area(area_id)
+    return area.name if area else area_id
 
 
 class HashOptionsFlow(OptionsFlow):
@@ -169,7 +179,7 @@ class HashOptionsFlow(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CHORE_NAME): selector.TextSelector(),
-                    vol.Optional(CONF_ROOM, default=""): selector.TextSelector(),
+                    vol.Optional(CONF_ROOM, default=""): selector.AreaSelector(),
                     vol.Required(
                         CONF_INTERVAL_PRESET, default="2_weeks"
                     ): selector.SelectSelector(
@@ -211,7 +221,6 @@ class HashOptionsFlow(OptionsFlow):
                         selector.NumberSelectorConfig(
                             min=1,
                             max=730,
-                            step=1,
                             mode=selector.NumberSelectorMode.BOX,
                             unit_of_measurement="days",
                         )
@@ -231,7 +240,7 @@ class HashOptionsFlow(OptionsFlow):
         chore_options = [
             selector.SelectOptionDict(
                 value=c[CONF_CHORE_ID],
-                label=f"{c[CONF_CHORE_NAME]} ({c.get(CONF_ROOM, '')})",
+                label=f"{c[CONF_CHORE_NAME]} ({_resolve_area_name(self.hass, c.get(CONF_ROOM, ''))})",
             )
             for c in self._chores
         ]
@@ -301,7 +310,7 @@ class HashOptionsFlow(OptionsFlow):
                     ): selector.TextSelector(),
                     vol.Optional(
                         CONF_ROOM, default=chore.get(CONF_ROOM, "")
-                    ): selector.TextSelector(),
+                    ): selector.AreaSelector(),
                     vol.Required(
                         CONF_INTERVAL_PRESET, default=current_preset
                     ): selector.SelectSelector(
@@ -350,7 +359,6 @@ class HashOptionsFlow(OptionsFlow):
                         selector.NumberSelectorConfig(
                             min=1,
                             max=730,
-                            step=1,
                             mode=selector.NumberSelectorMode.BOX,
                             unit_of_measurement="days",
                         )
@@ -371,7 +379,7 @@ class HashOptionsFlow(OptionsFlow):
         chore_options = [
             selector.SelectOptionDict(
                 value=c[CONF_CHORE_ID],
-                label=f"{c[CONF_CHORE_NAME]} ({c.get(CONF_ROOM, '')})",
+                label=f"{c[CONF_CHORE_NAME]} ({_resolve_area_name(self.hass, c.get(CONF_ROOM, ''))})",
             )
             for c in self._chores
         ]

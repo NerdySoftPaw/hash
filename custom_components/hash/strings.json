@@ -19,7 +19,7 @@
         "title": "Add Chore",
         "data": {
           "name": "Chore Name",
-          "room": "Room",
+          "room": "Area",
           "interval_preset": "Cleaning Interval",
           "assigned_person": "Assigned Person (leave empty for rotating)"
         }
@@ -40,7 +40,7 @@
         "title": "Edit Chore",
         "data": {
           "name": "Chore Name",
-          "room": "Room",
+          "room": "Area",
           "interval_preset": "Cleaning Interval",
           "assigned_person": "Assigned Person (leave empty for rotating)"
         }

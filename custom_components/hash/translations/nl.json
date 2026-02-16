@@ -19,7 +19,7 @@
         "title": "Taak toevoegen",
         "data": {
           "name": "Taaknaam",
-          "room": "Kamer",
+          "room": "Ruimte",
           "interval_preset": "Schoonmaakinterval",
           "assigned_person": "Toegewezen persoon (leeg laten voor rotatie)"
         }
@@ -40,7 +40,7 @@
         "title": "Taak bewerken",
         "data": {
           "name": "Taaknaam",
-          "room": "Kamer",
+          "room": "Ruimte",
           "interval_preset": "Schoonmaakinterval",
           "assigned_person": "Toegewezen persoon (leeg laten voor rotatie)"
         }

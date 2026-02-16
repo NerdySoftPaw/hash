@@ -19,7 +19,7 @@
         "title": "Aufgabe hinzufügen",
         "data": {
           "name": "Aufgabenname",
-          "room": "Raum",
+          "room": "Bereich",
           "interval_preset": "Reinigungsintervall",
           "assigned_person": "Zugewiesene Person (leer lassen für Rotation)"
         }
@@ -40,7 +40,7 @@
         "title": "Aufgabe bearbeiten",
         "data": {
           "name": "Aufgabenname",
-          "room": "Raum",
+          "room": "Bereich",
           "interval_preset": "Reinigungsintervall",
           "assigned_person": "Zugewiesene Person (leer lassen für Rotation)"
         }

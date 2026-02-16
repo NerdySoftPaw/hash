@@ -21,6 +21,8 @@ from .const import (
     SERVICE_SET_VACATION,
 )
 from .coordinator import HashCoordinator
+from .panel import async_register_panel, async_unregister_panel
+from .websocket import register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +55,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.services.has_service(DOMAIN, SERVICE_COMPLETE_CHORE):
         _register_services(hass)
 
+    # Register panel and websocket commands (only once)
+    if not hass.data[DOMAIN].get("_panel_registered"):
+        await async_register_panel(hass)
+        register_websocket_commands(hass)
+        hass.data[DOMAIN]["_panel_registered"] = True
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
@@ -70,6 +78,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+        # Unregister panel if no more entries remain
+        remaining = {
+            k: v
+            for k, v in hass.data.get(DOMAIN, {}).items()
+            if isinstance(v, HashCoordinator)
+        }
+        if not remaining and hass.data.get(DOMAIN, {}).get("_panel_registered"):
+            await async_unregister_panel(hass)
+            hass.data[DOMAIN]["_panel_registered"] = False
     return unload_ok
 
 

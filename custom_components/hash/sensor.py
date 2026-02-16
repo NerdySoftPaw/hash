@@ -107,6 +107,7 @@ class HashChoreSensor(CoordinatorEntity[HashCoordinator], SensorEntity):
             "last_cleaned": data["last_cleaned"],
             "days_since_cleaning": data["days_since"],
             "status": data["status"],
+            "area_id": data["area_id"],
             "room": data["room"],
             "interval_days": data["interval_days"],
             "interval_display": data["interval_display"],

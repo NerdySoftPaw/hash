@@ -8,6 +8,7 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
@@ -118,6 +119,7 @@ class HashCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         global_pause = options.get(CONF_GLOBAL_PAUSE, False)
         persons = _get_all_persons(self.hass)
 
+        area_registry = ar.async_get(self.hass)
         result: dict[str, Any] = {}
 
         for chore in chores:
@@ -145,9 +147,14 @@ class HashCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else:
                 next_due = calculate_next_due(last_cleaned, interval_days)
 
+            area_id = chore.get(CONF_ROOM, "")
+            area_entry = area_registry.async_get_area(area_id) if area_id else None
+            room_name = area_entry.name if area_entry else area_id
+
             result[chore_id] = {
                 "name": chore[CONF_CHORE_NAME],
-                "room": chore.get(CONF_ROOM, ""),
+                "area_id": area_id,
+                "room": room_name,
                 "interval_days": interval_days,
                 "interval_display": get_interval_display(interval_days),
                 "cleanliness": cleanliness,

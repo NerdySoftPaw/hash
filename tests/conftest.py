@@ -26,6 +26,25 @@ def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
     return
 
 
+@pytest.fixture(autouse=True)
+def bypass_panel() -> Generator[None]:
+    """Mock panel registration so tests don't need frontend/panel_custom."""
+    with (
+        patch(
+            "custom_components.hash.async_register_panel",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "custom_components.hash.async_unregister_panel",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "custom_components.hash.register_websocket_commands",
+        ),
+    ):
+        yield
+
+
 MOCK_CHORE_ID = "test-chore-001"
 MOCK_CHORE_ID_2 = "test-chore-002"
 
@@ -33,7 +52,7 @@ MOCK_CHORE_ID_2 = "test-chore-002"
 def make_chore(
     chore_id: str = MOCK_CHORE_ID,
     name: str = "Vacuum Living Room",
-    room: str = "Living Room",
+    room: str = "living_room",
     interval: int = 14,
     assigned_person: str = "",
 ) -> dict:
@@ -68,7 +87,7 @@ def mock_options_two_chores() -> dict:
             make_chore(
                 chore_id=MOCK_CHORE_ID_2,
                 name="Mop Kitchen",
-                room="Kitchen",
+                room="kitchen",
                 interval=7,
                 assigned_person="person.alice",
             ),

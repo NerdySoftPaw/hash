@@ -61,7 +61,7 @@ async def test_options_flow_add_chore(hass: HomeAssistant, mock_config_entry):
         result["flow_id"],
         user_input={
             CONF_CHORE_NAME: "Dust Shelves",
-            CONF_ROOM: "Study",
+            CONF_ROOM: "study",
             CONF_INTERVAL_PRESET: "1_week",
         },
     )
@@ -90,7 +90,7 @@ async def test_options_flow_add_chore_custom_interval(
         result["flow_id"],
         user_input={
             CONF_CHORE_NAME: "Special Task",
-            CONF_ROOM: "Garage",
+            CONF_ROOM: "garage",
             CONF_INTERVAL_PRESET: "custom",
         },
     )

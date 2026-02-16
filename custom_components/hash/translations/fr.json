@@ -19,7 +19,7 @@
         "title": "Ajouter une tâche",
         "data": {
           "name": "Nom de la tâche",
-          "room": "Pièce",
+          "room": "Zone",
           "interval_preset": "Intervalle de nettoyage",
           "assigned_person": "Personne assignée (laisser vide pour rotation)"
         }
@@ -40,7 +40,7 @@
         "title": "Modifier la tâche",
         "data": {
           "name": "Nom de la tâche",
-          "room": "Pièce",
+          "room": "Zone",
           "interval_preset": "Intervalle de nettoyage",
           "assigned_person": "Personne assignée (laisser vide pour rotation)"
         }

@@ -28,7 +28,8 @@ async def test_sensor_setup(hass: HomeAssistant, mock_config_entry):
     assert len(hash_sensors) >= 1
     sensor = hash_sensors[0]
     assert float(sensor.state) > 0
-    assert sensor.attributes.get("room") == "Living Room"
+    assert sensor.attributes.get("area_id") == "living_room"
+    assert sensor.attributes.get("room") == "living_room"
     assert sensor.attributes.get("interval_days") == 14
     assert sensor.attributes.get("status") in ("Great", "Fine", "Dirty", "Urgent")
     assert sensor.attributes.get("chore_id") == MOCK_CHORE_ID

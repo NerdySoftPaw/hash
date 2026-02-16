@@ -108,7 +108,8 @@ class TestCoordinator:
         assert MOCK_CHORE_ID in data
         chore = data[MOCK_CHORE_ID]
         assert chore["name"] == "Vacuum Living Room"
-        assert chore["room"] == "Living Room"
+        assert chore["area_id"] == "living_room"
+        assert chore["room"] == "living_room"
         assert chore["interval_days"] == 14
         assert 0.0 <= chore["cleanliness"] <= 100.0
         assert chore["status"] in ("Great", "Fine", "Dirty", "Urgent")

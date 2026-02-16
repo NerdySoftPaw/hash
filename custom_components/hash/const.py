@@ -76,3 +76,8 @@ ICON_GREAT = "mdi:check-circle"
 ICON_FINE = "mdi:progress-check"
 ICON_DIRTY = "mdi:alert-circle"
 ICON_URGENT = "mdi:alert-octagon"
+
+# Panel
+PANEL_URL_PATH = "hash"
+PANEL_TITLE = "HASH"
+PANEL_ICON = "mdi:broom"
