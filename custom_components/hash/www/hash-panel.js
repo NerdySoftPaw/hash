@@ -381,7 +381,7 @@ class HashPanel extends LitElement {
     return html`
       <div class="modal-overlay" @click=${this._closeAddForm}>
         <div class="modal" @click=${(e) => e.stopPropagation()}>
-          <div class="modal-header">
+          <div class="modal-hero">
             <span class="modal-title">New Chore</span>
             <button class="modal-close" @click=${this._closeAddForm}>\u00d7</button>
           </div>
@@ -853,7 +853,7 @@ class HashPanel extends LitElement {
       .modal-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.45);
+        background: rgba(0, 0, 0, 0.5);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -863,36 +863,43 @@ class HashPanel extends LitElement {
       }
       .modal {
         background: var(--hash-card-bg);
-        border-radius: 20px;
+        border-radius: var(--hash-radius);
         width: 100%;
         max-width: 420px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
         overflow: hidden;
         display: flex;
         flex-direction: column;
       }
-      .modal-header {
+
+      /* Gradient header matching the hero */
+      .modal-hero {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 20px 24px 16px;
-        border-bottom: 1px solid var(--hash-divider);
+        padding: 18px 20px;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color, #03a9f4) 0%,
+          color-mix(in srgb, var(--primary-color, #03a9f4) 70%, #000) 100%
+        );
+        color: #fff;
       }
       .modal-title {
-        font-size: 18px;
+        font-size: 17px;
         font-weight: 700;
-        color: var(--hash-text);
+        letter-spacing: 0.3px;
       }
       .modal-close {
-        background: none;
+        background: rgba(255, 255, 255, 0.18);
         border: none;
-        font-size: 24px;
-        color: var(--hash-secondary);
+        font-size: 18px;
+        color: #fff;
         cursor: pointer;
         padding: 0;
         line-height: 1;
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -900,10 +907,11 @@ class HashPanel extends LitElement {
         transition: background 0.15s;
       }
       .modal-close:hover {
-        background: var(--hash-divider);
+        background: rgba(255, 255, 255, 0.32);
       }
+
       .modal-body {
-        padding: 20px 24px;
+        padding: 20px 20px 8px;
         display: flex;
         flex-direction: column;
         gap: 16px;
@@ -970,18 +978,18 @@ class HashPanel extends LitElement {
         color: var(--hash-secondary);
         pointer-events: none;
       }
+
       .modal-footer {
         display: flex;
-        justify-content: flex-end;
         gap: 10px;
-        padding: 16px 24px 20px;
-        border-top: 1px solid var(--hash-divider);
+        padding: 16px 20px 20px;
       }
       .btn-cancel {
-        background: none;
+        flex: 1;
+        background: transparent;
         border: 1px solid var(--hash-divider);
         color: var(--hash-secondary);
-        padding: 10px 20px;
+        padding: 11px 16px;
         border-radius: 10px;
         cursor: pointer;
         font-size: 14px;
@@ -993,14 +1001,20 @@ class HashPanel extends LitElement {
         color: var(--hash-text);
       }
       .btn-save {
-        background: var(--hash-primary);
+        flex: 1;
+        background: linear-gradient(
+          135deg,
+          var(--primary-color, #03a9f4) 0%,
+          color-mix(in srgb, var(--primary-color, #03a9f4) 70%, #000) 100%
+        );
         border: none;
         color: #fff;
-        padding: 10px 24px;
+        padding: 11px 16px;
         border-radius: 10px;
         cursor: pointer;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 700;
+        letter-spacing: 0.3px;
         transition: opacity 0.15s, transform 0.1s;
       }
       .btn-save:hover {
