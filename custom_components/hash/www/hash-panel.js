@@ -68,26 +68,66 @@ class HashPanel extends LitElement {
   _getCurrentPersonEntityId() {
     if (!this.hass || !this.hass.user) return null;
     const userId = this.hass.user.id;
+    const userName = this.hass.user.name || "";
+    const userNameLower = userName.toLowerCase();
     const states = this.hass.states;
+
+    // 1) Match by HA user_id attribute on person entity
     for (const entityId of Object.keys(states)) {
       if (!entityId.startsWith("person.")) continue;
-      const state = states[entityId];
-      if (state.attributes && state.attributes.user_id === userId) {
+      const attrs = states[entityId].attributes || {};
+      if (attrs.user_id === userId) {
         return entityId;
       }
     }
-    const userName = this.hass.user.name;
-    for (const entityId of Object.keys(states)) {
-      if (!entityId.startsWith("person.")) continue;
-      const state = states[entityId];
-      if (
-        state.attributes &&
-        state.attributes.friendly_name &&
-        state.attributes.friendly_name.toLowerCase() === userName.toLowerCase()
-      ) {
-        return entityId;
+
+    // 2) Match by friendly_name
+    if (userNameLower) {
+      for (const entityId of Object.keys(states)) {
+        if (!entityId.startsWith("person.")) continue;
+        const attrs = states[entityId].attributes || {};
+        if ((attrs.friendly_name || "").toLowerCase() === userNameLower) {
+          return entityId;
+        }
       }
     }
+
+    // 3) Match by entity_id slug (person.kevin → "kevin")
+    if (userNameLower) {
+      for (const entityId of Object.keys(states)) {
+        if (!entityId.startsWith("person.")) continue;
+        const slug = entityId.split(".")[1] || "";
+        if (slug.toLowerCase() === userNameLower) {
+          return entityId;
+        }
+      }
+    }
+
+    // 4) Partial / contains match (user "Kevin M" → person with friendly_name "Kevin")
+    if (userNameLower) {
+      for (const entityId of Object.keys(states)) {
+        if (!entityId.startsWith("person.")) continue;
+        const attrs = states[entityId].attributes || {};
+        const fn = (attrs.friendly_name || "").toLowerCase();
+        if (fn && (userNameLower.includes(fn) || fn.includes(userNameLower))) {
+          return entityId;
+        }
+      }
+    }
+
+    console.warn(
+      "HASH: Could not match current user to a person entity.",
+      "User ID:", userId,
+      "User name:", userName,
+      "Person entities:",
+      Object.keys(states)
+        .filter((e) => e.startsWith("person."))
+        .map((e) => ({
+          entity_id: e,
+          friendly_name: (states[e].attributes || {}).friendly_name,
+          user_id: (states[e].attributes || {}).user_id,
+        }))
+    );
     return null;
   }
 
