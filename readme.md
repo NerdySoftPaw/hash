@@ -18,7 +18,8 @@ A custom Home Assistant integration that manages cleaning chores as real HA enti
 - **Vacation mode** — skip persons on vacation in rotation; their pinned chores get redistributed
 - **Global pause** — stop generating calendar events while decay and sensors keep running
 - **Persistent state** — last cleaned times and rotation indices survive HA restarts
-- **Fully configurable via UI** — no YAML needed; everything is managed through the options flow
+- **Dashboard panel** — dedicated sidebar panel showing your chores grouped by room, with progress bars and one-click completion
+- **Fully configurable via UI** — no YAML needed; everything is managed through the options flow or the dashboard
 - **Multilingual** — English, German, French, Dutch
 
 ---
@@ -85,6 +86,22 @@ Select **Manage Vacation & Pause**:
 
 - **Persons on Vacation** — multi-select persons to exclude from rotation. Their pinned chores are redistributed to remaining active persons.
 - **Global Pause** — stops calendar event generation. Sensors still decay and update.
+
+---
+
+## Dashboard
+
+After setup, a **HASH** entry appears in your sidebar (broom icon). The dashboard shows:
+
+- **My Tasks** — chores assigned to the logged-in user, grouped by room
+- **Unassigned Tasks** — chores without a pinned person
+- **Other People** — chores assigned to other persons
+
+Each chore card displays a color-coded progress bar (Great = green, Fine = blue, Dirty = orange, Urgent = red) and a checkmark button to mark it as completed.
+
+**Admin features:** Admins see a **+** button in the header to add new chores directly from the dashboard (name, area, interval, person).
+
+The panel matches your HA theme automatically (dark mode, custom colors) and adapts to mobile screens.
 
 ---
 
@@ -288,6 +305,8 @@ custom_components/hash/
 ├── const.py             # Constants, thresholds, interval presets
 ├── coordinator.py       # DataUpdateCoordinator, decay, Store persistence
 ├── config_flow.py       # ConfigFlow + OptionsFlow (chores, vacation)
+├── panel.py             # Frontend panel registration
+├── websocket.py         # WebSocket API for dashboard
 ├── scheduler.py         # Schedule generation (weekend weighting, assignee logic)
 ├── sensor.py            # Cleanliness sensor per chore
 ├── calendar.py          # Shared + per-person calendar entities
@@ -295,6 +314,8 @@ custom_components/hash/
 ├── strings.json         # UI strings (base)
 ├── manifest.json        # Integration metadata
 ├── icons.json           # Service icons
+├── www/
+│   └── hash-panel.js    # LitElement dashboard panel
 └── translations/
     ├── en.json           # English
     ├── de.json           # German
