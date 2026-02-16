@@ -51,7 +51,6 @@ class HashPanel extends LitElement {
       this._data = result;
       this._loading = false;
 
-      // Fetch areas for the add form
       const areaReg = await this.hass.callWS({
         type: "config/area_registry/list",
       });
@@ -73,7 +72,6 @@ class HashPanel extends LitElement {
         return entityId;
       }
     }
-    // Fallback: match by name
     const userName = this.hass.user.name;
     for (const entityId of Object.keys(states)) {
       if (!entityId.startsWith("person.")) continue;
@@ -116,7 +114,6 @@ class HashPanel extends LitElement {
   }
 
   _sortByDue(chores) {
-    const now = Date.now();
     return [...chores].sort((a, b) => {
       const dueA = a.next_due ? new Date(a.next_due).getTime() : Infinity;
       const dueB = b.next_due ? new Date(b.next_due).getTime() : Infinity;
@@ -207,30 +204,62 @@ class HashPanel extends LitElement {
     this._activeTab = tab;
   }
 
+  /* ---- Render helpers ---- */
+
+  _renderHeader(isAdmin) {
+    return html`
+      <div class="hero">
+        <div class="hero-inner">
+          <ha-menu-button
+            .hass=${this.hass}
+            .narrow=${this.narrow}
+          ></ha-menu-button>
+          <div class="hero-text">
+            <div class="hero-title">HASH</div>
+            <div class="hero-sub">Home Assistant Sweeping Hub</div>
+          </div>
+          ${isAdmin
+            ? html`
+                <button
+                  class="add-btn"
+                  @click=${() => (this._showAddForm = true)}
+                  title="Add Chore"
+                >
+                  +
+                </button>
+              `
+            : ""}
+        </div>
+      </div>
+    `;
+  }
+
   _renderTabs() {
     const mineCount = this._getChoresForTab("mine").length;
     const othersCount = this._getChoresForTab("others").length;
     const allCount = this._getChoresForTab("all").length;
 
     const tabs = [
-      { id: "mine", label: "My Tasks", count: mineCount },
-      { id: "others", label: "Others", count: othersCount },
-      { id: "all", label: "All Tasks", count: allCount },
+      { id: "mine", label: "My Tasks", count: mineCount, icon: "\u2709" },
+      { id: "others", label: "Others", count: othersCount, icon: "\uD83D\uDC65" },
+      { id: "all", label: "All", count: allCount, icon: "\uD83D\uDCCB" },
     ];
 
     return html`
-      <div class="tab-bar">
-        ${tabs.map(
-          (t) => html`
-            <button
-              class="tab ${this._activeTab === t.id ? "active" : ""}"
-              @click=${() => this._setTab(t.id)}
-            >
-              ${t.label}
-              <span class="tab-badge">${t.count}</span>
-            </button>
-          `
-        )}
+      <div class="tab-bar-wrap">
+        <div class="tab-bar">
+          ${tabs.map(
+            (t) => html`
+              <button
+                class="tab ${this._activeTab === t.id ? "active" : ""}"
+                @click=${() => this._setTab(t.id)}
+              >
+                <span class="tab-label">${t.label}</span>
+                <span class="tab-count">${t.count}</span>
+              </button>
+            `
+          )}
+        </div>
       </div>
     `;
   }
@@ -240,13 +269,25 @@ class HashPanel extends LitElement {
     const chores = this._getChoresForTab(this._activeTab);
 
     if (chores.length === 0) {
+      const emoji =
+        this._activeTab === "mine"
+          ? "\uD83C\uDF89"
+          : this._activeTab === "others"
+            ? "\uD83D\uDE4C"
+            : "\uD83D\uDDC2\uFE0F";
       const msg =
         this._activeTab === "mine"
           ? "You're all caught up!"
           : this._activeTab === "others"
             ? "No tasks assigned to others."
-            : "No tasks yet.";
-      return html`<div class="empty-state">${msg}</div>`;
+            : "No tasks created yet.";
+      return html`
+        <div class="empty-state">
+          <div class="empty-icon">${emoji}</div>
+          <div class="empty-msg">${msg}</div>
+          <div class="empty-hint">Tasks will appear here once created.</div>
+        </div>
+      `;
     }
 
     return this._renderChoreList(chores, showAssignee);
@@ -267,9 +308,7 @@ class HashPanel extends LitElement {
       <div class="room-group">
         <div class="room-header">${roomName}</div>
         <div class="room-cards">
-          ${chores.map((c, i) =>
-            this._renderChoreCard(c, showAssignee, i === 0, i === chores.length - 1)
-          )}
+          ${chores.map((c) => this._renderChoreCard(c, showAssignee))}
         </div>
       </div>
     `;
@@ -278,18 +317,18 @@ class HashPanel extends LitElement {
   _renderDueMeta(chore) {
     const daysLeft = this._getDaysLeft(chore);
     if (daysLeft === null) {
-      return html`${chore.interval_display} · paused`;
+      return html`${chore.interval_display} \u00b7 paused`;
     }
     if (daysLeft < 0) {
-      return html`<span class="due-overdue">overdue by ${Math.abs(daysLeft)}d</span> · ${chore.interval_display}`;
+      return html`<span class="due-overdue">overdue ${Math.abs(daysLeft)}d</span> \u00b7 ${chore.interval_display}`;
     }
     if (daysLeft === 0) {
-      return html`<span class="due-today">due today</span> · ${chore.interval_display}`;
+      return html`<span class="due-today">due today</span> \u00b7 ${chore.interval_display}`;
     }
-    return html`${daysLeft}d left · ${chore.interval_display}`;
+    return html`${daysLeft}d left \u00b7 ${chore.interval_display}`;
   }
 
-  _renderChoreCard(chore, showAssignee, isFirst, isLast) {
+  _renderChoreCard(chore, showAssignee) {
     const isCompleting = this._completingChore === chore.chore_id;
     const color = this._getStatusColor(chore.status);
     const pct = Math.round(chore.cleanliness);
@@ -300,18 +339,19 @@ class HashPanel extends LitElement {
     }
 
     return html`
-      <div
-        class="chore-card ${isCompleting ? "completing" : ""} ${isFirst ? "first" : ""} ${isLast ? "last" : ""}"
-      >
+      <div class="chore-card ${isCompleting ? "completing" : ""}">
         <div class="status-stripe" style="background:${color}"></div>
         <div class="card-body">
-          <div class="card-row-main">
+          <div class="card-top">
             <span class="chore-name">${chore.name}</span>
             ${assigneeLabel
               ? html`<span class="assignee-tag">${assigneeLabel}</span>`
               : ""}
-            <span class="chore-status" style="color:${color}">${chore.status}</span>
-            <div class="progress-bar">
+            <span class="spacer"></span>
+            <span class="status-badge" style="background:${color}">${chore.status}</span>
+          </div>
+          <div class="card-mid">
+            <div class="progress-track">
               <div
                 class="progress-fill"
                 style="width:${pct}%;background:${color}"
@@ -324,12 +364,10 @@ class HashPanel extends LitElement {
               ?disabled=${isCompleting}
               title="Mark as completed"
             >
-              ${isCompleting ? "..." : "\u2713"}
+              ${isCompleting ? "\u2026" : "\u2713"}
             </button>
           </div>
-          <div class="card-row-meta">
-            ${this._renderDueMeta(chore)}
-          </div>
+          <div class="card-meta">${this._renderDueMeta(chore)}</div>
         </div>
       </div>
     `;
@@ -345,7 +383,7 @@ class HashPanel extends LitElement {
         <div class="modal" @click=${(e) => e.stopPropagation()}>
           <div class="modal-header">
             <span class="modal-title">New Chore</span>
-            <button class="modal-close" @click=${this._closeAddForm}>&times;</button>
+            <button class="modal-close" @click=${this._closeAddForm}>\u00d7</button>
           </div>
           <div class="modal-body">
             <div class="field">
@@ -423,41 +461,25 @@ class HashPanel extends LitElement {
   }
 
   render() {
-    const isAdmin = !this._loading && this.hass && this.hass.user && this.hass.user.is_admin;
-    const globalPause = !this._loading && this._data && this._data.global_pause;
+    const isAdmin =
+      !this._loading && this.hass && this.hass.user && this.hass.user.is_admin;
+    const globalPause =
+      !this._loading && this._data && this._data.global_pause;
 
     return html`
-      <div class="header">
-        <ha-menu-button
-          .hass=${this.hass}
-          .narrow=${this.narrow}
-        ></ha-menu-button>
-        <span class="header-title">HASH <span class="header-subtitle">Home Assistant Sweeping Hub</span></span>
-        ${isAdmin
-          ? html`
-              <button
-                class="add-btn"
-                @click=${() => (this._showAddForm = true)}
-                title="Add Chore"
-              >
-                +
-              </button>
-            `
-          : ""}
-      </div>
+      ${this._renderHeader(isAdmin)}
+
       ${this._loading
-        ? html`<div class="container"><p class="loading">Loading...</p></div>`
+        ? html`<div class="wrap"><p class="loading">Loading...</p></div>`
         : html`
-            <div class="page">
-              ${globalPause
-                ? html`<div class="pause-banner">
-                    Global Pause Active — no schedules generated
-                  </div>`
-                : ""}
-              ${this._renderTabs()}
-              <div class="container ${this.narrow ? "narrow" : ""}">
-                ${this._renderTabContent()}
-              </div>
+            ${globalPause
+              ? html`<div class="pause-banner">
+                  \u26A0 Global Pause Active — no schedules generated
+                </div>`
+              : ""}
+            ${this._renderTabs()}
+            <div class="wrap ${this.narrow ? "narrow" : ""}">
+              ${this._renderTabContent()}
             </div>
           `}
 
@@ -469,6 +491,8 @@ class HashPanel extends LitElement {
     return css`
       :host {
         display: block;
+        background: var(--secondary-background-color, #f5f5f5);
+        min-height: 100vh;
         --hash-card-bg: var(--card-background-color, #fff);
         --hash-text: var(--primary-text-color, #212121);
         --hash-secondary: var(--secondary-text-color, #727272);
@@ -478,197 +502,209 @@ class HashPanel extends LitElement {
           var(--card-background-color, #fff)
         );
         --hash-primary: var(--primary-color, #03a9f4);
-        --hash-radius: 10px;
+        --hash-radius: 12px;
       }
 
-      /* ---- Header ---- */
-      .header {
+      /* ======== Hero Header ======== */
+      .hero {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color, #03a9f4) 0%,
+          color-mix(in srgb, var(--primary-color, #03a9f4) 70%, #000) 100%
+        );
+        color: #fff;
+        padding: 0;
+      }
+      .hero-inner {
         display: flex;
         align-items: center;
-        height: 56px;
-        padding: 0 8px;
-        background: var(--app-header-background-color, var(--primary-color));
-        color: var(--app-header-text-color, #fff);
-        box-sizing: border-box;
-        position: sticky;
-        top: 0;
-        z-index: 10;
+        gap: 4px;
+        max-width: 832px;
+        margin: 0 auto;
+        padding: 12px 16px 16px;
       }
-      .header-title {
+      .hero-text {
         flex: 1;
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: 1px;
-        margin-left: 4px;
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
+        min-width: 0;
       }
-      .header-subtitle {
-        font-size: 13px;
+      .hero-title {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        line-height: 1.2;
+      }
+      .hero-sub {
+        font-size: 12px;
+        opacity: 0.75;
         font-weight: 400;
-        opacity: 0.7;
-        letter-spacing: 0;
+        margin-top: 1px;
       }
       .add-btn {
-        background: none;
-        border: 2px solid var(--app-header-text-color, #fff);
-        color: var(--app-header-text-color, #fff);
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        font-size: 20px;
+        background: rgba(255, 255, 255, 0.18);
+        border: none;
+        color: #fff;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        font-size: 22px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 4px;
         line-height: 1;
         padding: 0;
         transition: background 0.2s;
+        flex-shrink: 0;
       }
       .add-btn:hover {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.3);
       }
 
-      /* ---- Page ---- */
-      .page {
-        display: flex;
-        flex-direction: column;
-        min-height: 100%;
-      }
-
-      /* ---- Pause Banner ---- */
+      /* ======== Pause Banner ======== */
       .pause-banner {
         background: var(--warning-color, #ff9800);
         color: #fff;
         text-align: center;
         padding: 10px 16px;
-        font-weight: 500;
-        font-size: 14px;
+        font-weight: 600;
+        font-size: 13px;
       }
 
-      /* ---- Tab Bar ---- */
-      .tab-bar {
+      /* ======== Tab Bar ======== */
+      .tab-bar-wrap {
+        background: var(--hash-surface);
+        border-bottom: 1px solid var(--hash-divider);
         position: sticky;
         top: 0;
         z-index: 5;
+      }
+      .tab-bar {
         display: flex;
-        background: var(--hash-surface);
-        border-bottom: 1px solid var(--hash-divider);
-        padding: 0 16px;
+        gap: 4px;
         max-width: 800px;
         margin: 0 auto;
-        width: 100%;
-        box-sizing: border-box;
+        padding: 10px 16px;
       }
       .tab {
         flex: 1;
-        background: none;
-        border: none;
-        border-bottom: 2px solid transparent;
-        padding: 12px 8px 10px;
-        font-size: 14px;
+        background: transparent;
+        border: 1px solid var(--hash-divider);
+        border-radius: 10px;
+        padding: 9px 6px;
+        font-size: 13px;
         font-weight: 500;
         color: var(--hash-secondary);
         cursor: pointer;
-        transition: color 0.2s, border-color 0.2s;
+        transition: all 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
       }
       .tab:hover {
+        background: var(--hash-divider);
         color: var(--hash-text);
       }
       .tab.active {
-        color: var(--hash-primary);
-        border-bottom-color: var(--hash-primary);
+        background: var(--hash-primary);
+        border-color: var(--hash-primary);
+        color: #fff;
         font-weight: 600;
       }
-      .tab-badge {
-        background: var(--hash-divider);
-        color: var(--hash-secondary);
+      .tab-label {
+        white-space: nowrap;
+      }
+      .tab-count {
         font-size: 11px;
-        font-weight: 600;
-        padding: 1px 6px;
-        border-radius: 10px;
-        min-width: 18px;
+        font-weight: 700;
+        background: rgba(0, 0, 0, 0.1);
+        padding: 1px 7px;
+        border-radius: 8px;
+        min-width: 14px;
         text-align: center;
       }
-      .tab.active .tab-badge {
-        background: var(--hash-primary);
-        color: #fff;
+      .tab.active .tab-count {
+        background: rgba(255, 255, 255, 0.25);
       }
 
-      /* ---- Container ---- */
-      .container {
+      /* ======== Content Wrap ======== */
+      .wrap {
         max-width: 800px;
         margin: 0 auto;
-        padding: 20px 16px 32px;
+        padding: 20px 16px 40px;
         width: 100%;
         box-sizing: border-box;
       }
-      .container.narrow {
-        padding: 12px 8px 24px;
+      .wrap.narrow {
+        padding: 12px 8px 32px;
       }
 
       .loading {
         text-align: center;
-        padding: 48px 0;
+        padding: 64px 0;
         color: var(--hash-secondary);
-      }
-
-      /* ---- Empty State ---- */
-      .empty-state {
-        text-align: center;
-        color: var(--hash-secondary);
-        font-style: italic;
-        padding: 48px 16px;
         font-size: 15px;
       }
 
-      /* ---- Room Group ---- */
+      /* ======== Empty State ======== */
+      .empty-state {
+        text-align: center;
+        padding: 56px 24px;
+      }
+      .empty-icon {
+        font-size: 48px;
+        line-height: 1;
+        margin-bottom: 12px;
+      }
+      .empty-msg {
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--hash-text);
+        margin-bottom: 4px;
+      }
+      .empty-hint {
+        font-size: 13px;
+        color: var(--hash-secondary);
+      }
+
+      /* ======== Room Group ======== */
       .room-group {
         margin-bottom: 24px;
       }
       .room-header {
         color: var(--hash-secondary);
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 11px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
+        letter-spacing: 1px;
         padding: 0 4px 8px;
       }
       .room-cards {
         border-radius: var(--hash-radius);
         overflow: hidden;
-        box-shadow: var(
-          --ha-card-box-shadow,
-          0 1px 3px rgba(0, 0, 0, 0.08),
-          0 2px 8px rgba(0, 0, 0, 0.06)
-        );
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06),
+          0 4px 12px rgba(0, 0, 0, 0.04);
       }
 
-      /* ---- Chore Card ---- */
+      /* ======== Chore Card ======== */
       .chore-card {
         display: flex;
         background: var(--hash-card-bg);
         border-bottom: 1px solid var(--hash-divider);
-        transition: opacity 0.4s ease, transform 0.4s ease,
-          background 0.15s ease;
+        transition: opacity 0.4s, transform 0.4s, background 0.15s;
       }
       .chore-card:last-child {
         border-bottom: none;
       }
       .chore-card:hover {
-        background: var(
-          --ha-card-background,
-          color-mix(in srgb, var(--hash-card-bg), var(--hash-text) 3%)
+        background: color-mix(
+          in srgb,
+          var(--hash-card-bg) 96%,
+          var(--hash-text)
         );
       }
       .chore-card.completing {
-        opacity: 0.3;
+        opacity: 0.25;
         transform: scale(0.97);
       }
 
@@ -683,61 +719,73 @@ class HashPanel extends LitElement {
         padding: 12px 14px;
       }
 
-      .card-row-main {
+      .card-top {
         display: flex;
         align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
       }
-
       .chore-name {
         color: var(--hash-text);
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         min-width: 0;
       }
-
       .assignee-tag {
-        font-size: 11px;
-        font-weight: 500;
+        font-size: 10px;
+        font-weight: 600;
         color: var(--hash-primary);
-        background: color-mix(in srgb, var(--hash-primary) 12%, transparent);
-        padding: 1px 7px;
-        border-radius: 4px;
+        background: color-mix(
+          in srgb,
+          var(--hash-primary) 12%,
+          transparent
+        );
+        padding: 2px 8px;
+        border-radius: 6px;
         white-space: nowrap;
-      }
-
-      .chore-status {
-        font-size: 11px;
-        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.3px;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .status-badge {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #fff;
+        padding: 3px 8px;
+        border-radius: 6px;
         white-space: nowrap;
-        margin-left: auto;
       }
 
-      .progress-bar {
-        width: 80px;
+      .card-mid {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .progress-track {
+        flex: 1;
         height: 6px;
         background: var(--hash-divider);
         border-radius: 3px;
         overflow: hidden;
-        flex-shrink: 0;
       }
       .progress-fill {
         height: 100%;
         border-radius: 3px;
         transition: width 0.5s ease;
       }
-
       .pct {
         color: var(--hash-secondary);
         font-size: 11px;
-        min-width: 30px;
+        min-width: 32px;
         text-align: right;
+        font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
 
@@ -754,72 +802,54 @@ class HashPanel extends LitElement {
         align-items: center;
         justify-content: center;
         padding: 0;
-        transition: all 0.2s ease;
+        transition: all 0.2s;
         flex-shrink: 0;
       }
       .complete-btn:hover {
         border-color: var(--success-color, #4caf50);
         color: var(--success-color, #4caf50);
-        background: rgba(76, 175, 80, 0.08);
+        background: rgba(76, 175, 80, 0.1);
       }
       .complete-btn:disabled {
         opacity: 0.4;
         cursor: not-allowed;
       }
 
-      .card-row-meta {
+      .card-meta {
         color: var(--hash-secondary);
         font-size: 11px;
-        margin-top: 4px;
-        padding-left: 0;
+        margin-top: 6px;
       }
       .due-overdue {
         color: var(--error-color, #f44336);
-        font-weight: 600;
+        font-weight: 700;
       }
       .due-today {
         color: var(--warning-color, #ff9800);
-        font-weight: 600;
+        font-weight: 700;
       }
 
-      /* ---- Responsive: narrow cards ---- */
+      /* ======== Responsive ======== */
       @media (max-width: 600px) {
-        .card-row-main {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 4px 8px;
+        .hero-title {
+          font-size: 18px;
         }
-        .chore-name {
-          grid-column: 1;
-          grid-row: 1;
+        .hero-sub {
+          font-size: 11px;
         }
-        .chore-status {
-          grid-column: 2;
-          grid-row: 1;
-          margin-left: 0;
+        .tab {
+          padding: 8px 4px;
+          font-size: 12px;
         }
-        .assignee-tag {
-          grid-column: 1;
-          grid-row: 2;
-          justify-self: start;
+        .card-top {
+          flex-wrap: wrap;
         }
-        .progress-bar {
-          width: auto;
-          flex: 1;
-          grid-column: 1;
-          grid-row: 3;
-        }
-        .pct {
-          grid-row: 3;
-        }
-        .complete-btn {
-          grid-column: 2;
-          grid-row: 2 / 4;
-          align-self: center;
+        .card-mid {
+          flex-wrap: wrap;
         }
       }
 
-      /* ---- Modal ---- */
+      /* ======== Modal ======== */
       .modal-overlay {
         position: fixed;
         inset: 0;
@@ -841,7 +871,6 @@ class HashPanel extends LitElement {
         display: flex;
         flex-direction: column;
       }
-
       .modal-header {
         display: flex;
         align-items: center;
@@ -873,7 +902,6 @@ class HashPanel extends LitElement {
       .modal-close:hover {
         background: var(--hash-divider);
       }
-
       .modal-body {
         padding: 20px 24px;
         display: flex;
@@ -888,11 +916,11 @@ class HashPanel extends LitElement {
         min-width: 0;
       }
       .field-label {
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 11px;
+        font-weight: 700;
         color: var(--hash-secondary);
         text-transform: uppercase;
-        letter-spacing: 0.4px;
+        letter-spacing: 0.5px;
       }
       .field-row {
         display: flex;
@@ -907,7 +935,10 @@ class HashPanel extends LitElement {
         padding: 10px 12px;
         border: 1px solid var(--hash-divider);
         border-radius: 10px;
-        background: var(--input-fill-color, var(--secondary-background-color, #f5f5f5));
+        background: var(
+          --input-fill-color,
+          var(--secondary-background-color, #f5f5f5)
+        );
         color: var(--hash-text);
         font-size: 14px;
         box-sizing: border-box;
@@ -921,7 +952,8 @@ class HashPanel extends LitElement {
       .modal-body select:focus {
         outline: none;
         border-color: var(--hash-primary);
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hash-primary) 15%, transparent);
+        box-shadow: 0 0 0 3px
+          color-mix(in srgb, var(--hash-primary) 15%, transparent);
       }
       .input-suffix {
         position: relative;
@@ -938,7 +970,6 @@ class HashPanel extends LitElement {
         color: var(--hash-secondary);
         pointer-events: none;
       }
-
       .modal-footer {
         display: flex;
         justify-content: flex-end;
