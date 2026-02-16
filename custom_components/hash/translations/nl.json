@@ -1,0 +1,115 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HASH - Home Assistant Sweeping Hub",
+        "description": "Stel HASH in om je schoonmaaktaken te beheren. Configureer taken en personen in de integratie-opties na de installatie."
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HASH Opties",
+        "data": {
+          "action": "Kies een actie"
+        }
+      },
+      "add_chore": {
+        "title": "Taak toevoegen",
+        "data": {
+          "name": "Taaknaam",
+          "room": "Kamer",
+          "interval_preset": "Schoonmaakinterval",
+          "assigned_person": "Toegewezen persoon (leeg laten voor rotatie)"
+        }
+      },
+      "add_chore_custom_interval": {
+        "title": "Aangepast interval",
+        "data": {
+          "interval": "Interval in dagen"
+        }
+      },
+      "select_chore_edit": {
+        "title": "Selecteer taak om te bewerken",
+        "data": {
+          "chore_id": "Taak"
+        }
+      },
+      "edit_chore": {
+        "title": "Taak bewerken",
+        "data": {
+          "name": "Taaknaam",
+          "room": "Kamer",
+          "interval_preset": "Schoonmaakinterval",
+          "assigned_person": "Toegewezen persoon (leeg laten voor rotatie)"
+        }
+      },
+      "edit_chore_custom_interval": {
+        "title": "Aangepast interval",
+        "data": {
+          "interval": "Interval in dagen"
+        }
+      },
+      "select_chore_remove": {
+        "title": "Taak verwijderen",
+        "data": {
+          "chore_id": "Selecteer taak om te verwijderen"
+        }
+      },
+      "manage_vacation": {
+        "title": "Vakantie & Pauze",
+        "data": {
+          "vacation_persons": "Personen op vakantie",
+          "global_pause": "Globale pauze (geen planning, verval loopt door)"
+        }
+      }
+    }
+  },
+  "services": {
+    "complete_chore": {
+      "name": "Taak voltooien",
+      "description": "Markeer een taak als voltooid, reset de timer en ga door met de rotatie.",
+      "fields": {
+        "chore_id": {
+          "name": "Taak-ID",
+          "description": "Het unieke ID van de te voltooien taak."
+        }
+      }
+    },
+    "reset_chore": {
+      "name": "Taak resetten",
+      "description": "Reset de timer van een taak zonder de rotatie te veranderen.",
+      "fields": {
+        "chore_id": {
+          "name": "Taak-ID",
+          "description": "Het unieke ID van de te resetten taak."
+        }
+      }
+    },
+    "set_vacation": {
+      "name": "Vakantie instellen",
+      "description": "Vakantiemodus voor een persoon in- of uitschakelen.",
+      "fields": {
+        "person_entity_id": {
+          "name": "Persoon",
+          "description": "De persoon waarvoor vakantie ingesteld moet worden."
+        },
+        "vacation": {
+          "name": "Vakantie",
+          "description": "Of de persoon op vakantie is."
+        }
+      }
+    },
+    "set_global_pause": {
+      "name": "Globale pauze instellen",
+      "description": "Planninggeneratie globaal pauzeren of hervatten.",
+      "fields": {
+        "paused": {
+          "name": "Gepauzeerd",
+          "description": "Of de planning gepauzeerd moet worden."
+        }
+      }
+    }
+  }
+}

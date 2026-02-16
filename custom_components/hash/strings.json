@@ -1,0 +1,115 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HASH - Home Assistant Sweeping Hub",
+        "description": "Set up HASH to manage your cleaning chores. Configure chores and persons in the integration options after setup."
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HASH Options",
+        "data": {
+          "action": "Choose an action"
+        }
+      },
+      "add_chore": {
+        "title": "Add Chore",
+        "data": {
+          "name": "Chore Name",
+          "room": "Room",
+          "interval_preset": "Cleaning Interval",
+          "assigned_person": "Assigned Person (leave empty for rotating)"
+        }
+      },
+      "add_chore_custom_interval": {
+        "title": "Custom Interval",
+        "data": {
+          "interval": "Interval in days"
+        }
+      },
+      "select_chore_edit": {
+        "title": "Select Chore to Edit",
+        "data": {
+          "chore_id": "Chore"
+        }
+      },
+      "edit_chore": {
+        "title": "Edit Chore",
+        "data": {
+          "name": "Chore Name",
+          "room": "Room",
+          "interval_preset": "Cleaning Interval",
+          "assigned_person": "Assigned Person (leave empty for rotating)"
+        }
+      },
+      "edit_chore_custom_interval": {
+        "title": "Custom Interval",
+        "data": {
+          "interval": "Interval in days"
+        }
+      },
+      "select_chore_remove": {
+        "title": "Remove Chore",
+        "data": {
+          "chore_id": "Select chore to remove"
+        }
+      },
+      "manage_vacation": {
+        "title": "Vacation & Pause",
+        "data": {
+          "vacation_persons": "Persons on Vacation",
+          "global_pause": "Global Pause (no schedule, decay still runs)"
+        }
+      }
+    }
+  },
+  "services": {
+    "complete_chore": {
+      "name": "Complete Chore",
+      "description": "Mark a chore as completed, resetting its timer and advancing rotation.",
+      "fields": {
+        "chore_id": {
+          "name": "Chore ID",
+          "description": "The unique ID of the chore to complete."
+        }
+      }
+    },
+    "reset_chore": {
+      "name": "Reset Chore",
+      "description": "Reset a chore's timer without advancing rotation.",
+      "fields": {
+        "chore_id": {
+          "name": "Chore ID",
+          "description": "The unique ID of the chore to reset."
+        }
+      }
+    },
+    "set_vacation": {
+      "name": "Set Vacation",
+      "description": "Toggle vacation mode for a person.",
+      "fields": {
+        "person_entity_id": {
+          "name": "Person",
+          "description": "The person entity to set vacation for."
+        },
+        "vacation": {
+          "name": "Vacation",
+          "description": "Whether the person is on vacation."
+        }
+      }
+    },
+    "set_global_pause": {
+      "name": "Set Global Pause",
+      "description": "Pause or resume schedule generation globally.",
+      "fields": {
+        "paused": {
+          "name": "Paused",
+          "description": "Whether to pause the schedule."
+        }
+      }
+    }
+  }
+}

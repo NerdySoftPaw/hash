@@ -1,0 +1,8 @@
+{
+  "services": {
+    "complete_chore": "mdi:check-circle",
+    "reset_chore": "mdi:refresh",
+    "set_vacation": "mdi:beach",
+    "set_global_pause": "mdi:pause-circle"
+  }
+}

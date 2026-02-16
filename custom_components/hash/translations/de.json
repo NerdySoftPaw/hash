@@ -1,0 +1,115 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HASH - Home Assistant Sweeping Hub",
+        "description": "Richte HASH ein, um deine Putzaufgaben zu verwalten. Aufgaben und Personen kannst du nach der Einrichtung in den Integrationsoptionen konfigurieren."
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HASH Optionen",
+        "data": {
+          "action": "Aktion auswählen"
+        }
+      },
+      "add_chore": {
+        "title": "Aufgabe hinzufügen",
+        "data": {
+          "name": "Aufgabenname",
+          "room": "Raum",
+          "interval_preset": "Reinigungsintervall",
+          "assigned_person": "Zugewiesene Person (leer lassen für Rotation)"
+        }
+      },
+      "add_chore_custom_interval": {
+        "title": "Benutzerdefiniertes Intervall",
+        "data": {
+          "interval": "Intervall in Tagen"
+        }
+      },
+      "select_chore_edit": {
+        "title": "Aufgabe zum Bearbeiten auswählen",
+        "data": {
+          "chore_id": "Aufgabe"
+        }
+      },
+      "edit_chore": {
+        "title": "Aufgabe bearbeiten",
+        "data": {
+          "name": "Aufgabenname",
+          "room": "Raum",
+          "interval_preset": "Reinigungsintervall",
+          "assigned_person": "Zugewiesene Person (leer lassen für Rotation)"
+        }
+      },
+      "edit_chore_custom_interval": {
+        "title": "Benutzerdefiniertes Intervall",
+        "data": {
+          "interval": "Intervall in Tagen"
+        }
+      },
+      "select_chore_remove": {
+        "title": "Aufgabe entfernen",
+        "data": {
+          "chore_id": "Aufgabe zum Entfernen auswählen"
+        }
+      },
+      "manage_vacation": {
+        "title": "Urlaub & Pause",
+        "data": {
+          "vacation_persons": "Personen im Urlaub",
+          "global_pause": "Globale Pause (kein Zeitplan, Verfall läuft weiter)"
+        }
+      }
+    }
+  },
+  "services": {
+    "complete_chore": {
+      "name": "Aufgabe abschließen",
+      "description": "Markiert eine Aufgabe als erledigt, setzt den Timer zurück und rückt die Rotation vor.",
+      "fields": {
+        "chore_id": {
+          "name": "Aufgaben-ID",
+          "description": "Die eindeutige ID der abzuschließenden Aufgabe."
+        }
+      }
+    },
+    "reset_chore": {
+      "name": "Aufgabe zurücksetzen",
+      "description": "Setzt den Timer einer Aufgabe zurück, ohne die Rotation vorzurücken.",
+      "fields": {
+        "chore_id": {
+          "name": "Aufgaben-ID",
+          "description": "Die eindeutige ID der zurückzusetzenden Aufgabe."
+        }
+      }
+    },
+    "set_vacation": {
+      "name": "Urlaub setzen",
+      "description": "Urlaubsmodus für eine Person umschalten.",
+      "fields": {
+        "person_entity_id": {
+          "name": "Person",
+          "description": "Die Person, für die der Urlaub gesetzt werden soll."
+        },
+        "vacation": {
+          "name": "Urlaub",
+          "description": "Ob die Person im Urlaub ist."
+        }
+      }
+    },
+    "set_global_pause": {
+      "name": "Globale Pause setzen",
+      "description": "Zeitplanerstellung global pausieren oder fortsetzen.",
+      "fields": {
+        "paused": {
+          "name": "Pausiert",
+          "description": "Ob der Zeitplan pausiert werden soll."
+        }
+      }
+    }
+  }
+}

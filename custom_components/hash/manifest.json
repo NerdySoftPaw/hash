@@ -1,0 +1,13 @@
+{
+  "domain": "hash",
+  "name": "HASH - Home Assistant Sweeping Hub",
+  "version": "1.0.0",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/your-username/hash",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "requirements": [],
+  "single_config_entry": true
+}

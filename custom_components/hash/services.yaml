@@ -1,0 +1,50 @@
+complete_chore:
+  name: Complete Chore
+  description: Mark a chore as completed, resetting its timer and advancing rotation.
+  fields:
+    chore_id:
+      name: Chore ID
+      description: The unique ID of the chore to complete.
+      required: true
+      selector:
+        text:
+
+reset_chore:
+  name: Reset Chore
+  description: Reset a chore's timer without advancing rotation.
+  fields:
+    chore_id:
+      name: Chore ID
+      description: The unique ID of the chore to reset.
+      required: true
+      selector:
+        text:
+
+set_vacation:
+  name: Set Vacation
+  description: Toggle vacation mode for a person.
+  fields:
+    person_entity_id:
+      name: Person
+      description: The person entity to set vacation for.
+      required: true
+      selector:
+        entity:
+          domain: person
+    vacation:
+      name: Vacation
+      description: Whether the person is on vacation.
+      required: true
+      selector:
+        boolean:
+
+set_global_pause:
+  name: Set Global Pause
+  description: Pause or resume schedule generation globally.
+  fields:
+    paused:
+      name: Paused
+      description: Whether to pause the schedule.
+      required: true
+      selector:
+        boolean:

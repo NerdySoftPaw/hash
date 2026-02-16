@@ -1,0 +1,115 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HASH - Home Assistant Sweeping Hub",
+        "description": "Configurez HASH pour gérer vos tâches ménagères. Configurez les tâches et les personnes dans les options d'intégration après l'installation."
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options HASH",
+        "data": {
+          "action": "Choisir une action"
+        }
+      },
+      "add_chore": {
+        "title": "Ajouter une tâche",
+        "data": {
+          "name": "Nom de la tâche",
+          "room": "Pièce",
+          "interval_preset": "Intervalle de nettoyage",
+          "assigned_person": "Personne assignée (laisser vide pour rotation)"
+        }
+      },
+      "add_chore_custom_interval": {
+        "title": "Intervalle personnalisé",
+        "data": {
+          "interval": "Intervalle en jours"
+        }
+      },
+      "select_chore_edit": {
+        "title": "Sélectionner la tâche à modifier",
+        "data": {
+          "chore_id": "Tâche"
+        }
+      },
+      "edit_chore": {
+        "title": "Modifier la tâche",
+        "data": {
+          "name": "Nom de la tâche",
+          "room": "Pièce",
+          "interval_preset": "Intervalle de nettoyage",
+          "assigned_person": "Personne assignée (laisser vide pour rotation)"
+        }
+      },
+      "edit_chore_custom_interval": {
+        "title": "Intervalle personnalisé",
+        "data": {
+          "interval": "Intervalle en jours"
+        }
+      },
+      "select_chore_remove": {
+        "title": "Supprimer une tâche",
+        "data": {
+          "chore_id": "Sélectionner la tâche à supprimer"
+        }
+      },
+      "manage_vacation": {
+        "title": "Vacances et pause",
+        "data": {
+          "vacation_persons": "Personnes en vacances",
+          "global_pause": "Pause globale (pas de planification, la dégradation continue)"
+        }
+      }
+    }
+  },
+  "services": {
+    "complete_chore": {
+      "name": "Terminer la tâche",
+      "description": "Marque une tâche comme terminée, réinitialise son minuteur et avance la rotation.",
+      "fields": {
+        "chore_id": {
+          "name": "ID de la tâche",
+          "description": "L'identifiant unique de la tâche à terminer."
+        }
+      }
+    },
+    "reset_chore": {
+      "name": "Réinitialiser la tâche",
+      "description": "Réinitialise le minuteur d'une tâche sans avancer la rotation.",
+      "fields": {
+        "chore_id": {
+          "name": "ID de la tâche",
+          "description": "L'identifiant unique de la tâche à réinitialiser."
+        }
+      }
+    },
+    "set_vacation": {
+      "name": "Définir les vacances",
+      "description": "Activer ou désactiver le mode vacances pour une personne.",
+      "fields": {
+        "person_entity_id": {
+          "name": "Personne",
+          "description": "La personne pour laquelle définir les vacances."
+        },
+        "vacation": {
+          "name": "Vacances",
+          "description": "Si la personne est en vacances."
+        }
+      }
+    },
+    "set_global_pause": {
+      "name": "Définir la pause globale",
+      "description": "Mettre en pause ou reprendre la génération du planning globalement.",
+      "fields": {
+        "paused": {
+          "name": "En pause",
+          "description": "Si le planning doit être mis en pause."
+        }
+      }
+    }
+  }
+}
