@@ -12,8 +12,10 @@ class HashPanel extends LitElement {
       panel: { type: Object },
       _data: { type: Object, state: true },
       _loading: { type: Boolean, state: true },
-      _showAddForm: { type: Boolean, state: true },
-      _addForm: { type: Object, state: true },
+      _showForm: { type: Boolean, state: true },
+      _formMode: { type: String, state: true },
+      _editChoreId: { type: String, state: true },
+      _form: { type: Object, state: true },
       _completingChore: { type: String, state: true },
       _areas: { type: Array, state: true },
       _activeTab: { type: String, state: true },
@@ -24,8 +26,10 @@ class HashPanel extends LitElement {
     super();
     this._data = null;
     this._loading = true;
-    this._showAddForm = false;
-    this._addForm = { name: "", room: "", interval: 14, assigned_person: "" };
+    this._showForm = false;
+    this._formMode = "add"; // "add" | "edit"
+    this._editChoreId = null;
+    this._form = { name: "", room: "", interval: 14, assigned_person: "" };
     this._completingChore = null;
     this._areas = [];
     this._activeTab = "mine";
@@ -177,27 +181,73 @@ class HashPanel extends LitElement {
     this._completingChore = null;
   }
 
-  async _addChore() {
-    const form = this._addForm;
+  _openAddForm() {
+    this._formMode = "add";
+    this._editChoreId = null;
+    this._form = { name: "", room: "", interval: 14, assigned_person: "" };
+    this._showForm = true;
+  }
+
+  _openEditForm(chore) {
+    this._formMode = "edit";
+    this._editChoreId = chore.chore_id;
+    // Find the raw config for this chore to get the area_id (room field is display name)
+    const opts = this._data && this._data.chores && this._data.chores[chore.chore_id];
+    this._form = {
+      name: chore.name,
+      room: chore.area_id || "",
+      interval: chore.interval_days || 14,
+      assigned_person: chore.assigned_to || "",
+    };
+    this._showForm = true;
+  }
+
+  _closeForm() {
+    this._showForm = false;
+  }
+
+  async _saveForm() {
+    const form = this._form;
     if (!form.name || !form.interval) return;
+
     try {
-      await this.hass.callWS({
-        type: "hash/add_chore",
-        name: form.name,
-        room: form.room,
-        interval: parseInt(form.interval, 10),
-        assigned_person: form.assigned_person,
-      });
-      this._addForm = { name: "", room: "", interval: 14, assigned_person: "" };
-      this._showAddForm = false;
+      if (this._formMode === "add") {
+        await this.hass.callWS({
+          type: "hash/add_chore",
+          name: form.name,
+          room: form.room,
+          interval: parseInt(form.interval, 10),
+          assigned_person: form.assigned_person,
+        });
+      } else {
+        await this.hass.callWS({
+          type: "hash/edit_chore",
+          chore_id: this._editChoreId,
+          name: form.name,
+          room: form.room,
+          interval: parseInt(form.interval, 10),
+          assigned_person: form.assigned_person,
+        });
+      }
+      this._showForm = false;
       await this._fetchData();
     } catch (e) {
-      console.error("HASH: Failed to add chore", e);
+      console.error("HASH: Failed to save chore", e);
     }
   }
 
-  _closeAddForm() {
-    this._showAddForm = false;
+  async _deleteChore() {
+    if (!this._editChoreId) return;
+    try {
+      await this.hass.callWS({
+        type: "hash/delete_chore",
+        chore_id: this._editChoreId,
+      });
+      this._showForm = false;
+      await this._fetchData();
+    } catch (e) {
+      console.error("HASH: Failed to delete chore", e);
+    }
   }
 
   _setTab(tab) {
@@ -222,7 +272,7 @@ class HashPanel extends LitElement {
             ? html`
                 <button
                   class="add-btn"
-                  @click=${() => (this._showAddForm = true)}
+                  @click=${() => this._openAddForm()}
                   title="Add Chore"
                 >
                   +
@@ -332,6 +382,7 @@ class HashPanel extends LitElement {
     const isCompleting = this._completingChore === chore.chore_id;
     const color = this._getStatusColor(chore.status);
     const pct = Math.round(chore.cleanliness);
+    const isAdmin = this.hass && this.hass.user && this.hass.user.is_admin;
 
     let assigneeLabel = "";
     if (showAssignee && chore.assigned_to) {
@@ -339,9 +390,11 @@ class HashPanel extends LitElement {
     }
 
     return html`
-      <div class="chore-card ${isCompleting ? "completing" : ""}">
+      <div class="chore-card ${isCompleting ? "completing" : ""} ${isAdmin ? "editable" : ""}">
         <div class="status-stripe" style="background:${color}"></div>
-        <div class="card-body">
+        <div class="card-body"
+          @click=${isAdmin ? () => this._openEditForm(chore) : null}
+        >
           <div class="card-top">
             <span class="chore-name">${chore.name}</span>
             ${assigneeLabel
@@ -360,7 +413,7 @@ class HashPanel extends LitElement {
             <span class="pct">${pct}%</span>
             <button
               class="complete-btn"
-              @click=${() => this._completeChore(chore.chore_id)}
+              @click=${(e) => { e.stopPropagation(); this._completeChore(chore.chore_id); }}
               ?disabled=${isCompleting}
               title="Mark as completed"
             >
@@ -373,17 +426,20 @@ class HashPanel extends LitElement {
     `;
   }
 
-  _renderAddForm() {
+  _renderFormModal() {
     const persons = Object.keys(this.hass.states).filter((e) =>
       e.startsWith("person.")
     );
+    const isEdit = this._formMode === "edit";
+    const title = isEdit ? "Edit Chore" : "New Chore";
+    const saveLabel = isEdit ? "Save" : "Add Chore";
 
     return html`
-      <div class="modal-overlay" @click=${this._closeAddForm}>
+      <div class="modal-overlay" @click=${this._closeForm}>
         <div class="modal" @click=${(e) => e.stopPropagation()}>
           <div class="modal-hero">
-            <span class="modal-title">New Chore</span>
-            <button class="modal-close" @click=${this._closeAddForm}>\u00d7</button>
+            <span class="modal-title">${title}</span>
+            <button class="modal-close" @click=${this._closeForm}>\u00d7</button>
           </div>
           <div class="modal-body">
             <div class="field">
@@ -391,18 +447,18 @@ class HashPanel extends LitElement {
               <input
                 type="text"
                 placeholder="e.g. Vacuum living room"
-                .value=${this._addForm.name}
+                .value=${this._form.name}
                 @input=${(e) =>
-                  (this._addForm = { ...this._addForm, name: e.target.value })}
+                  (this._form = { ...this._form, name: e.target.value })}
               />
             </div>
             <div class="field-row">
               <div class="field">
                 <label class="field-label">Area</label>
                 <select
-                  .value=${this._addForm.room}
+                  .value=${this._form.room}
                   @change=${(e) =>
-                    (this._addForm = { ...this._addForm, room: e.target.value })}
+                    (this._form = { ...this._form, room: e.target.value })}
                 >
                   <option value="">None</option>
                   ${this._areas.map(
@@ -418,10 +474,10 @@ class HashPanel extends LitElement {
                     type="number"
                     min="1"
                     max="730"
-                    .value=${String(this._addForm.interval)}
+                    .value=${String(this._form.interval)}
                     @input=${(e) =>
-                      (this._addForm = {
-                        ...this._addForm,
+                      (this._form = {
+                        ...this._form,
                         interval: e.target.value,
                       })}
                   />
@@ -432,10 +488,10 @@ class HashPanel extends LitElement {
             <div class="field">
               <label class="field-label">Assigned Person</label>
               <select
-                .value=${this._addForm.assigned_person}
+                .value=${this._form.assigned_person}
                 @change=${(e) =>
-                  (this._addForm = {
-                    ...this._addForm,
+                  (this._form = {
+                    ...this._form,
                     assigned_person: e.target.value,
                   })}
               >
@@ -452,8 +508,12 @@ class HashPanel extends LitElement {
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn-cancel" @click=${this._closeAddForm}>Cancel</button>
-            <button class="btn-save" @click=${() => this._addChore()}>Add Chore</button>
+            ${isEdit
+              ? html`<button class="btn-delete" @click=${() => this._deleteChore()}>Delete</button>`
+              : ""}
+            <span class="spacer"></span>
+            <button class="btn-cancel" @click=${this._closeForm}>Cancel</button>
+            <button class="btn-save" @click=${() => this._saveForm()}>${saveLabel}</button>
           </div>
         </div>
       </div>
@@ -483,7 +543,7 @@ class HashPanel extends LitElement {
             </div>
           `}
 
-      ${this._showAddForm ? this._renderAddForm() : ""}
+      ${this._showForm ? this._renderFormModal() : ""}
     `;
   }
 
@@ -706,6 +766,9 @@ class HashPanel extends LitElement {
       .chore-card.completing {
         opacity: 0.25;
         transform: scale(0.97);
+      }
+      .chore-card.editable .card-body {
+        cursor: pointer;
       }
 
       .status-stripe {
@@ -981,11 +1044,29 @@ class HashPanel extends LitElement {
 
       .modal-footer {
         display: flex;
+        align-items: center;
         gap: 10px;
         padding: 16px 20px 20px;
       }
-      .btn-cancel {
+      .modal-footer .spacer {
         flex: 1;
+      }
+      .btn-delete {
+        background: none;
+        border: 1px solid var(--error-color, #f44336);
+        color: var(--error-color, #f44336);
+        padding: 11px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: background 0.15s, color 0.15s;
+      }
+      .btn-delete:hover {
+        background: var(--error-color, #f44336);
+        color: #fff;
+      }
+      .btn-cancel {
         background: transparent;
         border: 1px solid var(--hash-divider);
         color: var(--hash-secondary);
@@ -1001,7 +1082,6 @@ class HashPanel extends LitElement {
         color: var(--hash-text);
       }
       .btn-save {
-        flex: 1;
         background: linear-gradient(
           135deg,
           var(--primary-color, #03a9f4) 0%,

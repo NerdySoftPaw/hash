@@ -101,11 +101,20 @@ class HashCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Persist runtime data to store."""
         await self._store.async_save({"chores": self._runtime_data})
 
-    def _ensure_runtime(self, chore_id: str) -> dict[str, Any]:
-        """Ensure runtime data exists for a chore, initializing if needed."""
+    def _ensure_runtime(
+        self, chore_id: str, interval_days: int = 1
+    ) -> dict[str, Any]:
+        """Ensure runtime data exists for a chore, initializing if needed.
+
+        New chores start as immediately due by setting last_cleaned
+        far enough in the past (interval_days ago).
+        """
         if chore_id not in self._runtime_data:
+            initial_last = dt_util.utcnow() - datetime.timedelta(
+                days=interval_days
+            )
             self._runtime_data[chore_id] = {
-                "last_cleaned": dt_util.utcnow().isoformat(),
+                "last_cleaned": initial_last.isoformat(),
                 "rotation_index": 0,
                 "completed_by_history": [],
             }
@@ -124,14 +133,14 @@ class HashCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         for chore in chores:
             chore_id = chore[CONF_CHORE_ID]
-            runtime = self._ensure_runtime(chore_id)
+            interval_days = chore[CONF_INTERVAL]
+            runtime = self._ensure_runtime(chore_id, interval_days)
 
             last_cleaned_str = runtime["last_cleaned"]
             last_cleaned = datetime.datetime.fromisoformat(last_cleaned_str)
             if last_cleaned.tzinfo is None:
                 last_cleaned = last_cleaned.replace(tzinfo=datetime.UTC)
 
-            interval_days = chore[CONF_INTERVAL]
             cleanliness = calculate_cleanliness(last_cleaned, interval_days)
             status = get_status(cleanliness)
 
