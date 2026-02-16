@@ -341,74 +341,81 @@ class HashPanel extends LitElement {
     );
 
     return html`
-      <div class="add-form-overlay" @click=${this._closeAddForm}>
-        <div class="add-form" @click=${(e) => e.stopPropagation()}>
-          <h3>Add Chore</h3>
-          <label>
-            Name
-            <input
-              type="text"
-              .value=${this._addForm.name}
-              @input=${(e) =>
-                (this._addForm = { ...this._addForm, name: e.target.value })}
-            />
-          </label>
-          <label>
-            Area
-            <select
-              .value=${this._addForm.room}
-              @change=${(e) =>
-                (this._addForm = { ...this._addForm, room: e.target.value })}
-            >
-              <option value="">None</option>
-              ${this._areas.map(
-                (a) =>
-                  html`<option value=${a.area_id}>${a.name}</option>`
-              )}
-            </select>
-          </label>
-          <label>
-            Interval (days)
-            <input
-              type="number"
-              min="1"
-              max="730"
-              .value=${String(this._addForm.interval)}
-              @input=${(e) =>
-                (this._addForm = {
-                  ...this._addForm,
-                  interval: e.target.value,
-                })}
-            />
-          </label>
-          <label>
-            Assigned Person
-            <select
-              .value=${this._addForm.assigned_person}
-              @change=${(e) =>
-                (this._addForm = {
-                  ...this._addForm,
-                  assigned_person: e.target.value,
-                })}
-            >
-              <option value="">Unassigned</option>
-              ${persons.map(
-                (p) => html`
-                  <option value=${p}>
-                    ${this.hass.states[p].attributes.friendly_name ||
-                    p.replace("person.", "")}
-                  </option>
-                `
-              )}
-            </select>
-          </label>
-          <div class="form-actions">
-            <button class="cancel-btn" @click=${this._closeAddForm}>
-              Cancel
-            </button>
-            <button class="save-btn" @click=${() => this._addChore()}>
-              Add
-            </button>
+      <div class="modal-overlay" @click=${this._closeAddForm}>
+        <div class="modal" @click=${(e) => e.stopPropagation()}>
+          <div class="modal-header">
+            <span class="modal-title">New Chore</span>
+            <button class="modal-close" @click=${this._closeAddForm}>&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="field">
+              <label class="field-label">Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Vacuum living room"
+                .value=${this._addForm.name}
+                @input=${(e) =>
+                  (this._addForm = { ...this._addForm, name: e.target.value })}
+              />
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Area</label>
+                <select
+                  .value=${this._addForm.room}
+                  @change=${(e) =>
+                    (this._addForm = { ...this._addForm, room: e.target.value })}
+                >
+                  <option value="">None</option>
+                  ${this._areas.map(
+                    (a) =>
+                      html`<option value=${a.area_id}>${a.name}</option>`
+                  )}
+                </select>
+              </div>
+              <div class="field field-small">
+                <label class="field-label">Interval</label>
+                <div class="input-suffix">
+                  <input
+                    type="number"
+                    min="1"
+                    max="730"
+                    .value=${String(this._addForm.interval)}
+                    @input=${(e) =>
+                      (this._addForm = {
+                        ...this._addForm,
+                        interval: e.target.value,
+                      })}
+                  />
+                  <span class="suffix">days</span>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Assigned Person</label>
+              <select
+                .value=${this._addForm.assigned_person}
+                @change=${(e) =>
+                  (this._addForm = {
+                    ...this._addForm,
+                    assigned_person: e.target.value,
+                  })}
+              >
+                <option value="">Unassigned</option>
+                ${persons.map(
+                  (p) => html`
+                    <option value=${p}>
+                      ${this.hass.states[p].attributes.friendly_name ||
+                      p.replace("person.", "")}
+                    </option>
+                  `
+                )}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click=${this._closeAddForm}>Cancel</button>
+            <button class="btn-save" @click=${() => this._addChore()}>Add Chore</button>
           </div>
         </div>
       </div>
@@ -803,96 +810,164 @@ class HashPanel extends LitElement {
         }
       }
 
-      /* ---- Add Chore Form Overlay ---- */
-      .add-form-overlay {
+      /* ---- Modal ---- */
+      .modal-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 100;
+        padding: 16px;
+        box-sizing: border-box;
       }
-      .add-form {
+      .modal {
         background: var(--hash-card-bg);
-        border-radius: 16px;
-        padding: 24px;
-        width: 90%;
-        max-width: 400px;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
-      }
-      .add-form h3 {
-        margin: 0 0 20px 0;
-        color: var(--hash-text);
-        font-size: 18px;
-        font-weight: 600;
-      }
-      .add-form label {
-        display: block;
-        margin-bottom: 14px;
-        color: var(--hash-secondary);
-        font-size: 12px;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-      }
-      .add-form input,
-      .add-form select {
-        display: block;
+        border-radius: 20px;
         width: 100%;
-        margin-top: 4px;
+        max-width: 420px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid var(--hash-divider);
+      }
+      .modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--hash-text);
+      }
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--hash-secondary);
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: background 0.15s;
+      }
+      .modal-close:hover {
+        background: var(--hash-divider);
+      }
+
+      .modal-body {
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+      }
+      .field-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--hash-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .field-row {
+        display: flex;
+        gap: 12px;
+      }
+      .field-small {
+        flex: 0 0 120px;
+      }
+      .modal-body input,
+      .modal-body select {
+        width: 100%;
         padding: 10px 12px;
         border: 1px solid var(--hash-divider);
-        border-radius: 8px;
-        background: var(--input-fill-color, var(--hash-card-bg));
+        border-radius: 10px;
+        background: var(--input-fill-color, var(--secondary-background-color, #f5f5f5));
         color: var(--hash-text);
         font-size: 14px;
         box-sizing: border-box;
-        transition: border-color 0.2s;
+        transition: border-color 0.2s, box-shadow 0.2s;
       }
-      .add-form input:focus,
-      .add-form select:focus {
+      .modal-body input::placeholder {
+        color: var(--hash-secondary);
+        opacity: 0.6;
+      }
+      .modal-body input:focus,
+      .modal-body select:focus {
         outline: none;
         border-color: var(--hash-primary);
-        box-shadow: 0 0 0 2px
-          color-mix(in srgb, var(--hash-primary) 20%, transparent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--hash-primary) 15%, transparent);
       }
-      .form-actions {
+      .input-suffix {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .input-suffix input {
+        padding-right: 44px;
+      }
+      .suffix {
+        position: absolute;
+        right: 12px;
+        font-size: 12px;
+        color: var(--hash-secondary);
+        pointer-events: none;
+      }
+
+      .modal-footer {
         display: flex;
         justify-content: flex-end;
-        gap: 8px;
-        margin-top: 20px;
+        gap: 10px;
+        padding: 16px 24px 20px;
+        border-top: 1px solid var(--hash-divider);
       }
-      .cancel-btn {
+      .btn-cancel {
         background: none;
         border: 1px solid var(--hash-divider);
         color: var(--hash-secondary);
         padding: 10px 20px;
-        border-radius: 8px;
+        border-radius: 10px;
         cursor: pointer;
         font-size: 14px;
         font-weight: 500;
-        transition: background 0.15s;
+        transition: background 0.15s, color 0.15s;
       }
-      .cancel-btn:hover {
+      .btn-cancel:hover {
         background: var(--hash-divider);
+        color: var(--hash-text);
       }
-      .save-btn {
+      .btn-save {
         background: var(--hash-primary);
         border: none;
-        color: var(--text-primary-color, #fff);
-        padding: 10px 20px;
-        border-radius: 8px;
+        color: #fff;
+        padding: 10px 24px;
+        border-radius: 10px;
         cursor: pointer;
         font-size: 14px;
         font-weight: 600;
-        transition: opacity 0.15s;
+        transition: opacity 0.15s, transform 0.1s;
       }
-      .save-btn:hover {
-        opacity: 0.9;
+      .btn-save:hover {
+        opacity: 0.92;
+      }
+      .btn-save:active {
+        transform: scale(0.97);
       }
     `;
   }
